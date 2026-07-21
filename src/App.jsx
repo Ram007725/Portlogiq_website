@@ -5,6 +5,7 @@ import Shop from './pages/Shop.jsx';
 import CheckOut from './pages/CheckOut.jsx';
 import Product from './pages/Product.jsx';
 import IndexPage from './pages/Index.jsx';
+import Home from './pages/Home.jsx';
 import CartPage from './pages/cart.jsx';
 import ThankYouPage from './pages/ThankYouPage.jsx';
 import SignInPage from './components/auth/SignInForm.jsx';
@@ -31,7 +32,8 @@ function App() {
       />
       <Router>
         <Routes>
-          <Route path="/" element={<IndexPage />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/store" element={<IndexPage />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<CartPage />} />

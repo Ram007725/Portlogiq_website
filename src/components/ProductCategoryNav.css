@@ -1,15 +1,20 @@
-/* Searchable category dropdown — plain CSS (Tailwind output is static/precompiled). */
+/* Searchable category dropdown — plain CSS (Tailwind output is static/precompiled).
+   Colors match Home page primaries: accent #3d6b4f + sage #b8d4c3. */
 
 .pcn {
-  --pcn-blue: #2563eb;
-  --pcn-blue-deep: #1d4ed8;
-  --pcn-ink: #0f172a;
-  --pcn-muted: #64748b;
-  --pcn-soft: #94a3b8;
-  --pcn-line: #e7edf9;
+  --pcn-accent: #3d6b4f;
+  --pcn-accent-deep: #1a2e22;
+  --pcn-sage: #b8d4c3;
+  --pcn-sage-light: #d4ebe0;
+  --pcn-accent-light: #e8f2ec;
+  --pcn-ink: #1c1c1c;
+  --pcn-muted: #6b6b6b;
+  --pcn-soft: #8a9a90;
+  --pcn-line: #e8ebe9;
 
   position: relative;
   margin-bottom: 24px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   animation: pcn-fade-in 0.4s ease both;
 }
 
@@ -29,19 +34,19 @@
   gap: 10px;
   padding: 14px 16px 16px;
   border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9f8 100%);
   border: 1px solid var(--pcn-line);
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.03),
-    0 16px 34px -26px rgba(37, 99, 235, 0.28);
+    0 1px 2px rgba(28, 28, 28, 0.03),
+    0 16px 34px -26px rgba(61, 107, 79, 0.28);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .pcn-shell.is-open {
-  border-color: #d7e4ff;
+  border-color: var(--pcn-sage);
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.03),
-    0 20px 40px -24px rgba(37, 99, 235, 0.35);
+    0 1px 2px rgba(28, 28, 28, 0.03),
+    0 20px 40px -24px rgba(61, 107, 79, 0.35);
 }
 
 .pcn-label-row {
@@ -68,9 +73,9 @@
   height: 26px;
   padding: 0 8px;
   border-radius: 999px;
-  background: #eff4ff;
-  border: 1px solid #dbe6fb;
-  color: var(--pcn-blue);
+  background: var(--pcn-accent-light);
+  border: 1px solid var(--pcn-sage-light);
+  color: var(--pcn-accent);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -82,7 +87,7 @@
   width: 100%;
   padding: 10px 12px 10px 10px;
   border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #e2e8e4;
   background: #fff;
   text-align: left;
   cursor: pointer;
@@ -95,38 +100,38 @@
 }
 
 .pcn-trigger:hover {
-  border-color: #bfdbfe;
-  box-shadow: 0 8px 18px -14px rgba(37, 99, 235, 0.4);
+  border-color: var(--pcn-sage);
+  box-shadow: 0 8px 18px -14px rgba(61, 107, 79, 0.4);
   transform: translateY(-1px);
 }
 
 .pcn-trigger.is-open,
 .pcn-trigger:focus-visible {
   outline: none;
-  border-color: var(--pcn-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  border-color: var(--pcn-accent);
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.14);
 }
 
 /* Selected state — used for both "All products" and a specific category so
-   the closed trigger always shows the same light-blue highlight. */
+   the closed trigger always shows the same light sage highlight. */
 .pcn-trigger.has-selection {
-  border-color: #bfdbfe;
-  background: linear-gradient(135deg, #eff4ff 0%, #e8f0ff 100%);
-  box-shadow: 0 10px 22px -16px rgba(37, 99, 235, 0.45);
+  border-color: var(--pcn-sage);
+  background: linear-gradient(135deg, var(--pcn-accent-light) 0%, var(--pcn-sage-light) 100%);
+  box-shadow: 0 10px 22px -16px rgba(61, 107, 79, 0.45);
 }
 
 .pcn-trigger.has-selection:hover {
-  border-color: var(--pcn-blue);
-  box-shadow: 0 12px 26px -14px rgba(37, 99, 235, 0.55);
+  border-color: var(--pcn-accent);
+  box-shadow: 0 12px 26px -14px rgba(61, 107, 79, 0.55);
 }
 
 .pcn-trigger.has-selection .pcn-trigger-name {
-  color: var(--pcn-blue-deep);
+  color: var(--pcn-accent-deep);
 }
 
 .pcn-trigger.has-selection .pcn-trigger-media {
-  border-color: #bfdbfe;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  border-color: var(--pcn-sage);
+  box-shadow: 0 0 0 2px rgba(61, 107, 79, 0.12);
 }
 
 .pcn-trigger-media {
@@ -135,17 +140,17 @@
   border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #f1f5f9;
-  border: 1px solid #edf0f5;
+  background: #f1f5f3;
+  border: 1px solid #edf0ee;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .pcn-trigger-media.is-icon {
-  background: linear-gradient(145deg, #eaf1ff 0%, #dbeafe 100%);
-  color: var(--pcn-blue);
-  border-color: #d7e4ff;
+  background: linear-gradient(145deg, var(--pcn-accent-light) 0%, var(--pcn-sage-light) 100%);
+  color: var(--pcn-accent);
+  border-color: var(--pcn-sage);
 }
 
 .pcn-trigger-media img {
@@ -197,7 +202,7 @@
 
 .pcn-trigger.is-open .pcn-trigger-chevron {
   transform: rotate(180deg);
-  color: var(--pcn-blue);
+  color: var(--pcn-accent);
 }
 
 .pcn-backdrop {
@@ -209,12 +214,16 @@
      document.body, so it's no longer a descendant of .pcn in the real DOM
      — redeclare the theme variables here so they don't silently fall back
      to "unset" (which broke the selected row's highlight + text color). */
-  --pcn-blue: #2563eb;
-  --pcn-blue-deep: #1d4ed8;
-  --pcn-ink: #0f172a;
-  --pcn-muted: #64748b;
-  --pcn-soft: #94a3b8;
-  --pcn-line: #e7edf9;
+  --pcn-accent: #3d6b4f;
+  --pcn-accent-deep: #1a2e22;
+  --pcn-sage: #b8d4c3;
+  --pcn-sage-light: #d4ebe0;
+  --pcn-accent-light: #e8f2ec;
+  --pcn-ink: #1c1c1c;
+  --pcn-muted: #6b6b6b;
+  --pcn-soft: #8a9a90;
+  --pcn-line: #e8ebe9;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Desktop: expand in document flow so the panel pushes the product list
      down instead of overlaying it (overlay + sibling stacking contexts made
@@ -235,8 +244,8 @@
   background: #fff;
   border: 1px solid var(--pcn-line);
   box-shadow:
-    0 8px 18px -14px rgba(15, 23, 42, 0.14),
-    0 18px 32px -22px rgba(37, 99, 235, 0.22);
+    0 8px 18px -14px rgba(28, 28, 28, 0.14),
+    0 18px 32px -22px rgba(61, 107, 79, 0.22);
   animation: pcn-menu-in 0.2s ease both;
 }
 
@@ -269,8 +278,8 @@
   height: 44px;
   padding: 0 40px 0 38px;
   border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1.5px solid #e2e8e4;
+  background: #f7f9f8;
   color: var(--pcn-ink);
   font-size: 0.88rem;
   font-weight: 500;
@@ -279,13 +288,13 @@
 }
 
 .pcn-search-input::placeholder {
-  color: #a8b3c5;
+  color: #a8b3ab;
 }
 
 .pcn-search-input:focus {
-  border-color: var(--pcn-blue);
+  border-color: var(--pcn-accent);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.12);
 }
 
 .pcn-search-clear {
@@ -300,7 +309,7 @@
   height: 26px;
   border: none;
   border-radius: 50%;
-  background: #e2e8f0;
+  background: #e2e8e4;
   color: var(--pcn-muted);
   cursor: pointer;
 }
@@ -318,7 +327,7 @@
   min-height: 0;
   padding-right: 2px;
   scrollbar-width: thin;
-  scrollbar-color: #bfdbfe transparent;
+  scrollbar-color: var(--pcn-sage) transparent;
 }
 
 .pcn-option {
@@ -341,7 +350,7 @@
 }
 
 .pcn-option:hover {
-  background: #f1f5f9;
+  background: #f1f5f3;
   transform: translateX(2px);
 }
 
@@ -351,19 +360,19 @@
 
 .pcn-option:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.18);
 }
 
-/* Clearly highlighted selected state — solid blue, rounded, with a soft glow
+/* Clearly highlighted selected state — solid accent, rounded, with a soft glow
    so the current category always stands out from the rest of the list. */
 .pcn-option.selected {
-  background: linear-gradient(135deg, var(--pcn-blue) 0%, var(--pcn-blue-deep) 100%);
-  box-shadow: 0 10px 20px -12px rgba(37, 99, 235, 0.6);
+  background: linear-gradient(135deg, var(--pcn-accent) 0%, var(--pcn-accent-deep) 100%);
+  box-shadow: 0 10px 20px -12px rgba(61, 107, 79, 0.6);
 }
 
 .pcn-option.selected:hover {
-  background: linear-gradient(135deg, var(--pcn-blue) 0%, var(--pcn-blue-deep) 100%);
-  box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.65);
+  background: linear-gradient(135deg, var(--pcn-accent) 0%, var(--pcn-accent-deep) 100%);
+  box-shadow: 0 12px 24px -10px rgba(61, 107, 79, 0.65);
   transform: translateX(2px);
 }
 
@@ -394,8 +403,8 @@
   border-radius: 11px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #f1f5f9;
-  border: 1px solid #edf0f5;
+  background: #f1f5f3;
+  border: 1px solid #edf0ee;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -409,9 +418,9 @@
 }
 
 .pcn-option-icon {
-  background: linear-gradient(145deg, #eaf1ff 0%, #dbeafe 100%);
-  color: var(--pcn-blue);
-  border-color: #d7e4ff;
+  background: linear-gradient(145deg, var(--pcn-accent-light) 0%, var(--pcn-sage-light) 100%);
+  color: var(--pcn-accent);
+  border-color: var(--pcn-sage);
 }
 
 .pcn-option-icon svg {
@@ -447,7 +456,7 @@
 
 .pcn-option-check {
   display: inline-flex;
-  color: var(--pcn-blue);
+  color: var(--pcn-accent);
   flex-shrink: 0;
 }
 
@@ -530,7 +539,7 @@ body.pcn-lock {
     margin: 0;
     padding: 0;
     width: 100%;
-    background: rgba(15, 23, 42, 0.45);
+    background: rgba(26, 46, 34, 0.45);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     animation: pcn-fade-in 0.2s ease both;
@@ -564,7 +573,7 @@ body.pcn-lock {
     width: 40px;
     height: 4px;
     border-radius: 999px;
-    background: #dbe3f0;
+    background: #dbe3dc;
   }
 
   .pcn-sheet-title {

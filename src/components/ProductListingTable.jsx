@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import "./ProductListingTable.css";
 
 const FALLBACK_IMG = "/img/default.png";
@@ -155,6 +156,13 @@ const ProductListingTable = ({ products, onAddToCart }) => {
         await onAddToCart(item.product, item.qty, selectedUnitIds[item.product.id] ?? null);
       }
       setQuantities({});
+      toast.success("Items added to cart successfully.", {
+        className: "brand-toast brand-toast--success",
+        progressClassName: "brand-toast__progress",
+      });
+    } catch (err) {
+      console.error("Bulk cart add failed:", err);
+      toast.error("Failed to add items to cart!");
     } finally {
       setBulkAdding(false);
     }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+/* Brand fonts (DM Sans + Cormorant Garamond) load once from src/index.css. */
 
 :root {
   --home-sage: #b8d4c3;
@@ -849,19 +849,29 @@
 .home-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(26, 46, 34, 0.55) 0%,
-    rgba(26, 46, 34, 0.25) 45%,
-    rgba(26, 46, 34, 0.45) 100%
-  );
+  /* Soft full-frame wash + stronger center panel so copy stays readable
+     on both light and dark photography without flattening the image. */
+  background:
+    radial-gradient(
+      ellipse 70% 65% at 50% 48%,
+      rgba(12, 22, 16, 0.58) 0%,
+      rgba(12, 22, 16, 0.28) 55%,
+      rgba(12, 22, 16, 0.12) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(26, 46, 34, 0.42) 0%,
+      rgba(26, 46, 34, 0.18) 42%,
+      rgba(26, 46, 34, 0.4) 100%
+    );
   z-index: 1;
+  pointer-events: none;
 }
 
 .home-hero-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.35) 100%);
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.42) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -872,8 +882,24 @@
   text-align: center;
   color: var(--home-white);
   max-width: 640px;
-  padding: 1.25rem 1.25rem;
+  margin: 0 1rem;
+  padding: 1.5rem 1.5rem 1.625rem;
+  border-radius: 18px;
+  background: rgba(12, 22, 16, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow:
+    0 12px 36px -18px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: home-hero-content-in 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@media (min-width: 768px) {
+  .home-hero-content {
+    padding: 1.75rem 2rem 1.875rem;
+    border-radius: 20px;
+  }
 }
 
 .swiper-slide-active .home-hero-content {
@@ -899,24 +925,30 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--home-white);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   padding: 0.3125rem 0.75rem;
   border-radius: 100px;
   margin-bottom: 0.75rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
+/* Higher specificity than `.home-page h2` so charcoal body headings
+   never override the hero title on busy slide photography. */
+.home-page .home-hero-title,
 .home-hero-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(1.5rem, 3.5vw, 2.25rem);
   font-weight: 500;
   line-height: 1.15;
   margin: 0 0 1.25rem;
-  color: var(--home-white);
+  color: #ffffff;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 .home-hero-cta {

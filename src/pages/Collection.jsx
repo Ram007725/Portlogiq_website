@@ -5,9 +5,9 @@ import FooterPage from "../components/FooterPage.jsx";
 import HeaderPage from "../components/HeaderPage.jsx";
 import ProductSkeleton from "../components/ProductSkeleton";
 import ProductListingTable from "../components/ProductListingTable.jsx";
+import "../components/ProductListingTable.css";
 import ProductCategoryNav from "../components/ProductCategoryNav.jsx";
 import ProductFilters from "../components/ProductFilters.jsx";
-import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext";
 import { DEFAULT_PRODUCT_FILTERS, filterAndSortProducts } from "../utils/productFilters";
 
@@ -108,29 +108,28 @@ const CollectionPage = () => {
       }
 
       await api.post("/api/store/cart/add", payload);
-      toast.success(`🛒 ${p.name} added to cart!`);
       await refreshCartCount();
     } catch (err) {
       console.error("Cart add failed:", err);
-      toast.error("Failed to add product to cart!");
+      throw err;
     }
   };
 
   if (loading) {
-    return <ProductSkeleton />;
+    return <ProductSkeleton variant="listing" />;
   }
 
   return (
-    <div className="min-h-screen font-sans">
+    <div className="plt-page min-h-screen">
       <HeaderPage />
 
       <main className="pt-20">
-        <section className="bg-gray-50 py-12 mt-11">
+        <section className="plt-page-section py-12 mt-11">
           <div className="max-w-7xl mx-auto px-6">
             <div className="plt-listing-intro">
               <div className="plt-page-head">
                 <span className="plt-eyebrow">Category</span>
-                <h2 className="text-4xl font-bold text-gray-800">
+                <h2>
                   {categoryName || "All Products"}
                 </h2>
                 <p className="plt-page-sub">

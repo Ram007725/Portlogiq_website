@@ -166,3 +166,69 @@
   display: flex;
   justify-content: center;
 }
+
+/* ── Brand toasts (Home / Shop primary green) ── */
+.Toastify__toast.brand-toast,
+.Toastify__toast {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  border-radius: 14px;
+  min-height: 56px;
+  padding: 14px 16px;
+  box-shadow:
+    0 1px 2px rgba(28, 28, 28, 0.04),
+    0 16px 36px -18px rgba(61, 107, 79, 0.35);
+  border: 1px solid #e8ebe9;
+}
+
+.Toastify__toast-body.brand-toast__body,
+.Toastify__toast-body {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  padding: 0;
+  color: #1c1c1c;
+}
+
+.Toastify__toast--success,
+.Toastify__toast.brand-toast--success {
+  background: linear-gradient(135deg, #e8f2ec 0%, #ffffff 48%, #f7f9f8 100%);
+  border: 1px solid #b8d4c3;
+  border-left: 4px solid #3d6b4f;
+  color: #1a2e22;
+}
+
+.Toastify__toast--success .Toastify__toast-icon,
+.Toastify__toast.brand-toast--success .Toastify__toast-icon {
+  width: 22px;
+  margin-inline-end: 12px;
+}
+
+.Toastify__toast--success .Toastify__toast-icon svg,
+.Toastify__toast.brand-toast--success .Toastify__toast-icon svg {
+  fill: #3d6b4f;
+}
+
+.Toastify__toast--success .Toastify__close-button,
+.Toastify__toast.brand-toast--success .Toastify__close-button {
+  color: #3d6b4f;
+  opacity: 0.55;
+}
+
+.Toastify__toast--success .Toastify__close-button:hover,
+.Toastify__toast.brand-toast--success .Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.Toastify__progress-bar--success,
+.Toastify__progress-bar.brand-toast__progress {
+  background: linear-gradient(90deg, #3d6b4f 0%, #8fb89e 100%);
+  height: 3px;
+}
+
+.Toastify__toast--error {
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
+}
+

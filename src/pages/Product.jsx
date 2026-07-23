@@ -102,11 +102,11 @@ const handleAddToCart = async () => {
   const decreaseQty = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   if (loadingProduct) {
-    return <ProductSkeleton />;
+    return <ProductSkeleton variant="detail" />;
   }
 
   if (loadingRandom) {
-    return <ProductSkeleton />;
+    return <ProductSkeleton variant="detail" />;
   }
 
   if (!product) {

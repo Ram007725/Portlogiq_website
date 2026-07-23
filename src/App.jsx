@@ -28,7 +28,17 @@ function App() {
   return (
     <>
       <ToastContainer
-        style={{ marginTop: "4.5rem", zIndex: 9999 }} 
+        style={{ marginTop: "4.5rem", zIndex: 9999 }}
+        position="top-right"
+        autoClose={3200}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="light"
+        toastClassName="brand-toast"
+        bodyClassName="brand-toast__body"
       />
       <Router>
         <Routes>

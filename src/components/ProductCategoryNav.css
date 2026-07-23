@@ -1,0 +1,600 @@
+/* Searchable category dropdown — plain CSS (Tailwind output is static/precompiled). */
+
+.pcn {
+  --pcn-blue: #2563eb;
+  --pcn-blue-deep: #1d4ed8;
+  --pcn-ink: #0f172a;
+  --pcn-muted: #64748b;
+  --pcn-soft: #94a3b8;
+  --pcn-line: #e7edf9;
+
+  position: relative;
+  margin-bottom: 24px;
+  animation: pcn-fade-in 0.4s ease both;
+}
+
+/* Keep the open panel above siblings that also create stacking contexts
+   (e.g. ProductFilters / table rows retaining transform from their entrance
+   animations). Without this, the expanded list paints underneath and looks
+   like a collapsed overlap. */
+.pcn.is-open {
+  z-index: 40;
+}
+
+.pcn-shell {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  border: 1px solid var(--pcn-line);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 16px 34px -26px rgba(37, 99, 235, 0.28);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.pcn-shell.is-open {
+  border-color: #d7e4ff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.03),
+    0 20px 40px -24px rgba(37, 99, 235, 0.35);
+}
+
+.pcn-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.pcn-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pcn-muted);
+}
+
+.pcn-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eff4ff;
+  border: 1px solid #dbe6fb;
+  color: var(--pcn-blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pcn-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px 10px 10px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.25s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pcn-trigger:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 8px 18px -14px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.pcn-trigger.is-open,
+.pcn-trigger:focus-visible {
+  outline: none;
+  border-color: var(--pcn-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+/* Selected state — used for both "All products" and a specific category so
+   the closed trigger always shows the same light-blue highlight. */
+.pcn-trigger.has-selection {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff4ff 0%, #e8f0ff 100%);
+  box-shadow: 0 10px 22px -16px rgba(37, 99, 235, 0.45);
+}
+
+.pcn-trigger.has-selection:hover {
+  border-color: var(--pcn-blue);
+  box-shadow: 0 12px 26px -14px rgba(37, 99, 235, 0.55);
+}
+
+.pcn-trigger.has-selection .pcn-trigger-name {
+  color: var(--pcn-blue-deep);
+}
+
+.pcn-trigger.has-selection .pcn-trigger-media {
+  border-color: #bfdbfe;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.pcn-trigger-media {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  border: 1px solid #edf0f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pcn-trigger-media.is-icon {
+  background: linear-gradient(145deg, #eaf1ff 0%, #dbeafe 100%);
+  color: var(--pcn-blue);
+  border-color: #d7e4ff;
+}
+
+.pcn-trigger-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pcn-trigger-media svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pcn-trigger-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pcn-trigger-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--pcn-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcn-trigger-meta {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--pcn-soft);
+}
+
+.pcn-trigger-chevron {
+  display: inline-flex;
+  color: var(--pcn-muted);
+  transition: transform 0.22s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pcn-trigger-chevron svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pcn-trigger.is-open .pcn-trigger-chevron {
+  transform: rotate(180deg);
+  color: var(--pcn-blue);
+}
+
+.pcn-backdrop {
+  display: none;
+}
+
+.pcn-dropdown {
+  /* On mobile this panel is rendered via createPortal directly onto
+     document.body, so it's no longer a descendant of .pcn in the real DOM
+     — redeclare the theme variables here so they don't silently fall back
+     to "unset" (which broke the selected row's highlight + text color). */
+  --pcn-blue: #2563eb;
+  --pcn-blue-deep: #1d4ed8;
+  --pcn-ink: #0f172a;
+  --pcn-muted: #64748b;
+  --pcn-soft: #94a3b8;
+  --pcn-line: #e7edf9;
+
+  /* Desktop: expand in document flow so the panel pushes the product list
+     down instead of overlaying it (overlay + sibling stacking contexts made
+     the open menu look collapsed under search/table rows). */
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-height: min(480px, 65vh);
+  margin-top: 2px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--pcn-line);
+  box-shadow:
+    0 8px 18px -14px rgba(15, 23, 42, 0.14),
+    0 18px 32px -22px rgba(37, 99, 235, 0.22);
+  animation: pcn-menu-in 0.2s ease both;
+}
+
+.pcn-sheet-head {
+  display: none;
+}
+
+.pcn-search {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pcn-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--pcn-soft);
+  pointer-events: none;
+}
+
+.pcn-search-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pcn-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 38px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--pcn-ink);
+  font-size: 0.88rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pcn-search-input::placeholder {
+  color: #a8b3c5;
+}
+
+.pcn-search-input:focus {
+  border-color: var(--pcn-blue);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.pcn-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: var(--pcn-muted);
+  cursor: pointer;
+}
+
+.pcn-search-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pcn-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #bfdbfe transparent;
+}
+
+.pcn-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 13px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pcn-option:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.pcn-option:active {
+  transform: translateX(2px) scale(0.99);
+}
+
+.pcn-option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+/* Clearly highlighted selected state — solid blue, rounded, with a soft glow
+   so the current category always stands out from the rest of the list. */
+.pcn-option.selected {
+  background: linear-gradient(135deg, var(--pcn-blue) 0%, var(--pcn-blue-deep) 100%);
+  box-shadow: 0 10px 20px -12px rgba(37, 99, 235, 0.6);
+}
+
+.pcn-option.selected:hover {
+  background: linear-gradient(135deg, var(--pcn-blue) 0%, var(--pcn-blue-deep) 100%);
+  box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.65);
+  transform: translateX(2px);
+}
+
+.pcn-option.selected .pcn-option-name,
+.pcn-option.selected .pcn-option-meta,
+.pcn-option.selected .pcn-option-check {
+  color: #fff;
+}
+
+.pcn-option.selected .pcn-option-meta {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pcn-option.selected .pcn-option-media {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.pcn-option.selected .pcn-option-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.pcn-option-media {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  border: 1px solid #edf0f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pcn-option-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pcn-option-icon {
+  background: linear-gradient(145deg, #eaf1ff 0%, #dbeafe 100%);
+  color: var(--pcn-blue);
+  border-color: #d7e4ff;
+}
+
+.pcn-option-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pcn-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pcn-option-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pcn-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcn-option-meta {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--pcn-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcn-option-check {
+  display: inline-flex;
+  color: var(--pcn-blue);
+  flex-shrink: 0;
+}
+
+.pcn-option-check svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pcn-empty {
+  margin: 0;
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pcn-muted);
+}
+
+body.pcn-lock {
+  overflow: hidden;
+}
+
+@keyframes pcn-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pcn-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pcn-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .pcn {
+    margin-bottom: 18px;
+  }
+
+  .pcn-shell {
+    padding: 12px 14px 14px;
+    border-radius: 18px;
+  }
+
+  .pcn-trigger {
+    padding: 9px 10px 9px 9px;
+  }
+
+  .pcn-trigger-media {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pcn-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: pcn-fade-in 0.2s ease both;
+  }
+
+  .pcn-dropdown.is-sheet {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    z-index: 1001;
+    width: calc(100vw - 24px);
+    max-width: 440px;
+    max-height: min(75vh, 520px);
+    padding: 12px 14px 16px;
+    border-radius: 22px 22px 18px 18px;
+    transform: translateX(-50%);
+    animation: pcn-sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .pcn-sheet-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 6px;
+  }
+
+  .pcn-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #dbe3f0;
+  }
+
+  .pcn-sheet-title {
+    margin: 0;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--pcn-ink);
+    text-align: left;
+  }
+
+  .pcn-option {
+    padding: 12px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcn,
+  .pcn-dropdown,
+  .pcn-backdrop,
+  .pcn-trigger,
+  .pcn-trigger-chevron,
+  .pcn-option {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .pcn-trigger:hover,
+  .pcn-option:hover,
+  .pcn-option:active {
+    transform: none;
+  }
+}

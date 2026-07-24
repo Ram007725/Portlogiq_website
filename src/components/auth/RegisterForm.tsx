@@ -576,7 +576,7 @@ function RegisterFormInner() {
                             onChange={(selected) =>
                               setStateId(selected ? Number(selected.value) : "")
                             }
-                            placeholder="Select state"
+                            placeholder=""
                             isDisabled
                           />
                         </div>

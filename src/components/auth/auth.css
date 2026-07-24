@@ -18,6 +18,7 @@
   --auth-grad-soft: linear-gradient(180deg, #c5dccf 0%, #e8f2ec 55%, #ffffff 100%);
 
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -36,23 +37,48 @@
 
 .auth-main--solo {
   display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
-  padding-top: 0;
+  width: 100%;
+  padding: 1.5rem 0 2rem;
+  padding-top: 1.5rem;
+  box-sizing: border-box;
 }
 
 .auth-section {
-  padding: 2.5rem 0 4rem;
+  width: 100%;
+  padding: 0;
 }
 
 .auth-container {
   max-width: 80rem;
   margin: 0 auto;
   padding: 0 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
   .auth-container {
     padding: 0 2rem;
+  }
+}
+
+/* Desktop: true horizontal + vertical center */
+@media (min-width: 900px) {
+  .auth-main--solo {
+    justify-content: safe center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 2.5rem 0;
+  }
+
+  .auth-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 }
 

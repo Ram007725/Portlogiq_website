@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import Select from "react-select";
@@ -7,10 +7,23 @@ import api from "../../services/api";
 import { toast } from "react-toastify";
 import GoogleMap from "../../components/map/GoogleMap";
 import Swal from "sweetalert2";
+import "./auth.css";
 
-// Stripe Key
 const stripePromise = loadStripe(
   "pk_test_51SPGj8DPTiiAKcUNtf2eTgmcU3nBau2dC0qDcexcf3hgPoMBN6ESFD8MU0d2awkXAzfMEPylitgJXsCXtvjdFCDK00qfKK9LG6"
+);
+
+const UserIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+    <circle cx="12" cy="8" r="3.25" />
+    <path strokeLinecap="round" d="M5.5 19.5c1.2-3 3.5-4.5 6.5-4.5s5.3 1.5 6.5 4.5" />
+  </svg>
+);
+
+const ArrowIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+  </svg>
 );
 
 function PlaceAutocompleteInput({
@@ -50,11 +63,9 @@ function PlaceAutocompleteInput({
       if (input && !inputRef.current) {
         inputRef.current = input;
 
-        // Detect clear click
         input.addEventListener("input", () => {
           const value = input.value.trim();
           if (!value) {
-            console.log("🧹 Address cleared by user (close icon)");
             onInputChange("");
             onPlaceSelected(null);
             onClearAddress();
@@ -65,7 +76,6 @@ function PlaceAutocompleteInput({
       }
     }, 300);
 
-    // handle place select
     const onSelect = async (ev: any) => {
       const placePrediction =
         ev?.placePrediction ?? ev?.detail?.placePrediction ?? ev?.detail?.place ?? null;
@@ -118,7 +128,7 @@ function PlaceAutocompleteInput({
     };
   }, []);
 
-  return <div ref={hostRef} />;
+  return <div ref={hostRef} className="auth-places-host" />;
 }
 
 function RegisterFormInner() {
@@ -147,6 +157,7 @@ function RegisterFormInner() {
   const [alertMsg, setAlertMsg] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("success");
   const [error, setError] = useState("");
+  const [cardFocused, setCardFocused] = useState(false);
 
   const defaultCenter = useMemo(() => ({ lat: -33.8688, lng: 151.2093 }), []);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
@@ -171,7 +182,6 @@ function RegisterFormInner() {
     }
   }, [countryId]);
 
-  // ---- Place selected ----
   const onPlaceSelected = (place: google.maps.places.PlaceResult) => {
     setSelectedPlace(place);
 
@@ -192,7 +202,6 @@ function RegisterFormInner() {
     );
     if (foundState) setStateId(foundState.id);
 
-
     if (place.geometry?.location) {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
@@ -204,7 +213,7 @@ function RegisterFormInner() {
         const pos = { lat, lng };
         const pinElement = document.createElement("div");
         pinElement.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="red" viewBox="0 0 24 24">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#3d6b4f" viewBox="0 0 24 24">
             <path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7z"/>
           </svg>
         `;
@@ -233,12 +242,12 @@ function RegisterFormInner() {
     }
   }, [states, selectedPlace]);
 
-  // ---- Handle Register ----
   const handleRegister = async () => {
     setError("");
-    setLoading(true);
 
     if (!stripe || !elements) return;
+
+    setLoading(true);
 
     try {
       if (!latitude || !longitude) {
@@ -247,7 +256,6 @@ function RegisterFormInner() {
         return;
       }
 
-      // Stripe SetupIntent (Card Verification)
       const { data } = await api.get("/api/stripe/setup-intent");
       const clientSecret = data.client_secret;
 
@@ -265,7 +273,6 @@ function RegisterFormInner() {
         return;
       }
 
-      // Check ZonePartner availability
       const checkRes = await api.post("/api/store/check-zonepartner", {
         latitude,
         longitude,
@@ -282,8 +289,8 @@ function RegisterFormInner() {
           confirmButtonText: "Yes, become Freshleader",
           cancelButtonText: "No, register as Customer",
           reverseButtons: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
+          confirmButtonColor: "#3d6b4f",
+          cancelButtonColor: "#6b6b6b",
         });
 
         becomeZone = result.isConfirmed;
@@ -291,7 +298,6 @@ function RegisterFormInner() {
         becomeZone = false;
       }
 
-      // Register user
       const res = await api.post("/api/store/register", {
         first_name: firstName,
         last_name: lastName,
@@ -317,6 +323,7 @@ function RegisterFormInner() {
           text: "Your account has been created successfully.",
           timer: 2500,
           showConfirmButton: false,
+          confirmButtonColor: "#3d6b4f",
         });
         navigate("/login");
       } else {
@@ -324,6 +331,7 @@ function RegisterFormInner() {
           icon: "error",
           title: "Registration Failed",
           text: res.data.message || "Something went wrong during registration.",
+          confirmButtonColor: "#3d6b4f",
         });
       }
     } catch (err: any) {
@@ -335,6 +343,7 @@ function RegisterFormInner() {
           icon: "error",
           title: "Error",
           text: "Something went wrong. Please try again.",
+          confirmButtonColor: "#3d6b4f",
         });
       }
     } finally {
@@ -342,257 +351,326 @@ function RegisterFormInner() {
     }
   };
 
-  const customStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      borderRadius: "0.5rem",
-      minHeight: "50px",
-    }),
+  const handleAddressClear = () => {
+    setAddress1("");
+    setSuburb("");
+    setPostalCode("");
+    setLatitude("");
+    setLongitude("");
+    setSelectedPlace(null);
+    setStateId("");
+
+    if (advancedMarkerRef.current) {
+      advancedMarkerRef.current.map = null;
+      advancedMarkerRef.current = null;
+    }
+    setMapCenter(defaultCenter);
+    setTimeout(() => setIsLoaded(true), 200);
   };
 
-const handleAddressClear = () => {
- console.log(" handleAddressClear() called");
-
-  setAddress1("");
-  setSuburb("");
-  setPostalCode("");
-  setLatitude("");
-  setLongitude("");
-  setSelectedPlace(null);
-  setStateId("");
-
-  if (advancedMarkerRef.current) {
-    advancedMarkerRef.current.map = null;
-    advancedMarkerRef.current = null;
-  }
-  setMapCenter(defaultCenter);
-  setTimeout(() => setIsLoaded(true), 200);
-};
-
-useEffect(() => {
-  console.log("address1 changed:", address1);
-}, [address1]);
+  const countryOptions = countries.map((c) => ({ value: c.id, label: c.name }));
+  const stateOptions = states.map((s) => ({ value: s.id, label: s.name }));
+  const selectedCountry = countries.find((c) => c.id === countryId);
+  const selectedState = states.find((s) => s.id === stateId);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-10 " style={{ width: "900px" }}>
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleRegister();
-          }}
-          className="space-y-6"
-        >
-          {/* Name */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>First Name<span className="text-red-500">*</span></label>
-              <input type="text" 
-                     value={firstName} 
-                     onChange={(e) => setFirstName(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white 
-                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {errors.first_name && <p className="text-red-500">{errors.first_name[0]}</p>}
-            </div>
-
-            <div>
-              <label>Last Name<span className="text-red-500">*</span></label>
-              <input type="text" 
-                     value={lastName} 
-                     onChange={(e) => setLastName(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white 
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-              />
-              {errors.last_name && <p className="text-red-500">{errors.last_name[0]}</p>}
-            </div>
-          </div>
-
-          {/* Phone + Email */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Phone<span className="text-red-500">*</span></label>
-              <input type="tel" 
-                     value={phone} 
-                     onChange={(e) => setPhone(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-              />
-              {errors.phone && <p className="text-red-500">{errors.phone[0]}</p>}
-            </div>
-
-            <div>
-              <label>Email<span className="text-red-500">*</span></label>
-              <input type="email" 
-                     value={email} 
-                     onChange={(e) => setEmail(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-              />
-              {errors.email && <p className="text-red-500">{errors.email[0]}</p>}
-            </div>
-          </div>
-
-          {/* Password + Country */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Password<span className="text-red-500">*</span></label>
-              <input type="password" 
-                     value={password} 
-                     onChange={(e) => setPassword(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-              />
-            </div>
-
-            <div>
-              <label>Country</label>
-              <Select
-                options={countries.map((c) => ({ value: c.id, label: c.name }))}
-                value={countries.find((c) => c.id === countryId) ? { value: countryId, label: countries.find((c) => c.id === countryId)?.name } : null}
-                onChange={(selected) => setCountryId(selected ? Number(selected.value) : "")}
-                placeholder="Select Country"
-                styles={customStyles}
-              />
-            </div>
-          </div>
-
-          {/* Address Lines 2 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Address Line 1 (searchable)<span className="text-red-500">*</span></label>
-              <PlaceAutocompleteInput
-                onInputChange={setAddress1}
-                onPlaceSelected={onPlaceSelected}
-                onClearAddress={handleAddressClear}
-              />
-            </div>
-            <div>
-              <label>Address Line 2</label>
-              <input type="text" 
-                     value={address2} 
-                     onChange={(e) => setAddress2(e.target.value)} 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-              />
-            </div>
-          </div>
-
-          {/* State + Suburb */}
-          <div className="grid grid-cols-2 gap-4">
-             <div>
-              <label>Suburb<span className="text-red-500">*</span></label>
-              <input type="text" 
-                     value={suburb} 
-                     onChange={(e) => setSuburb(e.target.value)} 
-                     required 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                     readOnly 
-              />
-            </div>
-
-            <div>
-              <label>State</label>
-              <Select
-                options={states.map((s) => ({ value: s.id, label: s.name }))}
-                value={states.find((s) => s.id === stateId) ? { value: stateId, label: states.find((s) => s.id === stateId)?.name } : null}
-                onChange={(selected) => setStateId(selected ? Number(selected.value) : "")}
-                placeholder=""
-                styles={customStyles}
-                isDisabled
-              />
-            </div>
-          </div>
-
-          {/* Postal + Card */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Postal Code</label>
-              <input type="text" 
-                     value={postalCode} 
-                     onChange={(e) => setPostalCode(e.target.value)} 
-                     className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                     readOnly 
-              />
-            </div>
-            
-            <div className="card-section">
-              <label className="card-label">Card Details<span className="text-red-500"> *</span></label>
-              <div className="card-box">
-                <CardElement
-                  options={{
-                    hidePostalCode: true,
-                    style: {
-                      base: {
-                        fontSize: "16px",
-                        color: "#212529",
-                        '::placeholder': { color: '#6c757d' },
-                      },
-                      invalid: {
-                        color: "#dc3545",
-                      },
-                    },
-                  }}
-                  onFocus={() => {
-                    document.querySelector(".card-box")?.classList.add("card-box-focus");
-                  }}
-                  onBlur={() => {
-                    document.querySelector(".card-box")?.classList.remove("card-box-focus");
-                  }}
-                />
-              </div>
-              {error && <div className="text-red-500 text-sm">{error}</div>}
-            </div>
-          </div>
-
-          <div
-            className={`relative mt-4 ${
-              address1 ? 'h-[300px]' : 'h-0 overflow-hidden'
-            }`}
-          >
-            <div
-              className={`transition-opacity duration-300 ${
-                address1 ? 'opacity-100 visible' : 'opacity-0 invisible absolute top-0 left-0'
-              }`}
-            >
-              <GoogleMap
-                mapRef={mapRef}
-                isLoaded={isLoaded}
-                mode="marker"
-                polygonPath={[]}
-                setPolygonPath={() => {}}
-                existingPolygons={[]}
-                setLatitude={setLatitude}
-                setLongitude={setLongitude}
-                mapCenter={mapCenter}
-                setMapCenter={setMapCenter}
-                setAlertMsg={setAlertMsg}
-                setAlertType={setAlertType}
-              />
-              {latitude && longitude && (
-                <p className="text-sm mt-2 text-gray-600">
-                  Selected Location: {latitude}, {longitude}
+    <div className="auth-page">
+      <main className="auth-main auth-main--solo">
+        <section className="auth-section">
+          <div className="auth-container">
+            <div className="auth-register-wrap">
+              <div className="auth-intro">
+                <p className="auth-eyebrow">Create account</p>
+                <h1 className="auth-title">
+                  <span className="auth-title-icon">
+                    <UserIcon />
+                  </span>
+                  Register
+                </h1>
+                <p className="auth-lead">
+                  Join Portlogiq to shop fresh local produce. We&apos;ll verify your card securely for seamless checkout.
                 </p>
-              )}
+              </div>
+
+              <div className="auth-register-card">
+                <div className="auth-register-head">
+                  <div className="auth-register-head-copy">
+                    <p className="auth-register-head-label">New customer</p>
+                    <h2 className="auth-register-head-title">Account details</h2>
+                  </div>
+                </div>
+
+                <div className="auth-register-body">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleRegister();
+                    }}
+                    className="auth-form"
+                    noValidate
+                  >
+                    <div className="auth-section-block">
+                      <p className="auth-section-label">Personal information</p>
+                      <div className="auth-grid auth-grid-2">
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-first-name">
+                            First Name<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-first-name"
+                            type="text"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
+                            className="auth-input"
+                            autoComplete="given-name"
+                          />
+                          {errors.first_name && (
+                            <p className="auth-field-error">{errors.first_name[0]}</p>
+                          )}
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-last-name">
+                            Last Name<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-last-name"
+                            type="text"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                            className="auth-input"
+                            autoComplete="family-name"
+                          />
+                          {errors.last_name && (
+                            <p className="auth-field-error">{errors.last_name[0]}</p>
+                          )}
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-phone">
+                            Phone<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-phone"
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                            className="auth-input"
+                            autoComplete="tel"
+                          />
+                          {errors.phone && <p className="auth-field-error">{errors.phone[0]}</p>}
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-email">
+                            Email<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="auth-input"
+                            autoComplete="email"
+                          />
+                          {errors.email && <p className="auth-field-error">{errors.email[0]}</p>}
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-password">
+                            Password<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="auth-input"
+                            autoComplete="new-password"
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-country">
+                            Country
+                          </label>
+                          <Select
+                            inputId="reg-country"
+                            classNamePrefix="auth-select"
+                            options={countryOptions}
+                            value={
+                              selectedCountry
+                                ? { value: countryId, label: selectedCountry.name }
+                                : null
+                            }
+                            onChange={(selected) =>
+                              setCountryId(selected ? Number(selected.value) : "")
+                            }
+                            placeholder="Select Country"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="auth-section-block">
+                      <p className="auth-section-label">Delivery address</p>
+                      <div className="auth-grid auth-grid-2">
+                        <div className="auth-field">
+                          <label className="auth-label">
+                            Address Line 1 (searchable)<span className="auth-required">*</span>
+                          </label>
+                          <PlaceAutocompleteInput
+                            onInputChange={setAddress1}
+                            onPlaceSelected={onPlaceSelected}
+                            onClearAddress={handleAddressClear}
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-address2">
+                            Address Line 2
+                          </label>
+                          <input
+                            id="reg-address2"
+                            type="text"
+                            value={address2}
+                            onChange={(e) => setAddress2(e.target.value)}
+                            className="auth-input"
+                            autoComplete="address-line2"
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-suburb">
+                            Suburb<span className="auth-required">*</span>
+                          </label>
+                          <input
+                            id="reg-suburb"
+                            type="text"
+                            value={suburb}
+                            onChange={(e) => setSuburb(e.target.value)}
+                            required
+                            className="auth-input"
+                            readOnly
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-state">
+                            State
+                          </label>
+                          <Select
+                            inputId="reg-state"
+                            classNamePrefix="auth-select"
+                            options={stateOptions}
+                            value={
+                              selectedState
+                                ? { value: stateId, label: selectedState.name }
+                                : null
+                            }
+                            onChange={(selected) =>
+                              setStateId(selected ? Number(selected.value) : "")
+                            }
+                            placeholder="Select state"
+                            isDisabled
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-postal">
+                            Postal Code
+                          </label>
+                          <input
+                            id="reg-postal"
+                            type="text"
+                            value={postalCode}
+                            onChange={(e) => setPostalCode(e.target.value)}
+                            className="auth-input"
+                            readOnly
+                          />
+                        </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label">
+                            Card Details<span className="auth-required">*</span>
+                          </label>
+                          <div className={`auth-card-box${cardFocused ? " is-focused" : ""}`}>
+                            <CardElement
+                              options={{
+                                hidePostalCode: true,
+                                style: {
+                                  base: {
+                                    fontSize: "16px",
+                                    fontFamily: "DM Sans, sans-serif",
+                                    color: "#1c1c1c",
+                                    "::placeholder": { color: "#9aa39d" },
+                                  },
+                                  invalid: {
+                                    color: "#b91c1c",
+                                  },
+                                },
+                              }}
+                              onFocus={() => setCardFocused(true)}
+                              onBlur={() => setCardFocused(false)}
+                            />
+                          </div>
+                          {error && (
+                            <p className="auth-field-error" role="alert">
+                              {error}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={`auth-map-wrap ${address1 ? "is-open" : "is-closed"}`}>
+                        {address1 && (
+                          <GoogleMap
+                            mapRef={mapRef}
+                            isLoaded={isLoaded}
+                            mode="marker"
+                            polygonPath={[]}
+                            setPolygonPath={() => {}}
+                            existingPolygons={[]}
+                            setLatitude={setLatitude}
+                            setLongitude={setLongitude}
+                            mapCenter={mapCenter}
+                            setMapCenter={setMapCenter}
+                            setAlertMsg={setAlertMsg}
+                            setAlertType={setAlertType}
+                          />
+                        )}
+                      </div>
+                      {latitude && longitude && (
+                        <p className="auth-map-coords">
+                          Selected location: {latitude}, {longitude}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!stripe || loading}
+                      className="auth-submit"
+                    >
+                      {loading ? "Verifying…" : "Create account"}
+                      {!loading && <ArrowIcon />}
+                    </button>
+                  </form>
+
+                  <p className="auth-switch">
+                    Already have an account? <Link to="/login">Sign in</Link>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Submit */}
-          <div>
-            <button type="submit" disabled={!stripe || loading} className="w-full bg-blue-600 text-white py-3 rounded-lg">
-              {loading ? "Verifying..." : "Register"}
-            </button>
-          </div>
-        </form>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

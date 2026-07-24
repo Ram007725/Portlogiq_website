@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useWishlist } from "../context/WishlistContext";
 import "./ProductListingTable.css";
 
 const FALLBACK_IMG = "/img/default.png";
@@ -65,11 +66,27 @@ const BagIcon = () => (
   </svg>
 );
 
+const HeartIcon = ({ filled }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="plt-wishlist-icon">
+    <path
+      d="M12 20.25S4.5 15.2 4.5 9.9A4.65 4.65 0 019.3 5.25c1.35 0 2.55.6 3.2 1.55a4.05 4.05 0 013.2-1.55 4.65 4.65 0 014.8 4.65c0 5.3-7.5 10.35-7.5 10.35z"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const ProductListingTable = ({ products, onAddToCart }) => {
   const [quantities, setQuantities] = useState({});
   const [selectedUnitIds, setSelectedUnitIds] = useState({});
   const [bulkAdding, setBulkAdding] = useState(false);
+  const [pulseId, setPulseId] = useState(null);
   const dockRef = useRef(null);
+  const pulseTimerRef = useRef(null);
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   // Keep the bar fixed to the viewport while browsing, but lift it up when the
   // page footer enters the screen so it never overlaps (or slips behind) footer
@@ -110,6 +127,12 @@ const ProductListingTable = ({ products, onAddToCart }) => {
     };
   }, [products?.length]);
 
+  useEffect(() => {
+    return () => {
+      if (pulseTimerRef.current) window.clearTimeout(pulseTimerRef.current);
+    };
+  }, []);
+
   const getQty = (id) => quantities[id] || 0;
 
   // Always derive the next value from the latest state (not a value captured in the
@@ -132,6 +155,18 @@ const ProductListingTable = ({ products, onAddToCart }) => {
 
   const selectUnit = (productId, unitId) => {
     setSelectedUnitIds((prev) => ({ ...prev, [productId]: unitId }));
+  };
+
+  const handleWishlistToggle = (product) => {
+    const added = toggleWishlist(product);
+    setPulseId(product.id);
+    if (pulseTimerRef.current) window.clearTimeout(pulseTimerRef.current);
+    pulseTimerRef.current = window.setTimeout(() => setPulseId(null), 420);
+
+    toast.success(added ? "Added to wishlist." : "Removed from wishlist.", {
+      className: "brand-toast brand-toast--success",
+      progressClassName: "brand-toast__progress",
+    });
   };
 
   if (!products || products.length === 0) return null;
@@ -179,6 +214,7 @@ const ProductListingTable = ({ products, onAddToCart }) => {
                 <th className="plt-th plt-col-price">Price</th>
                 <th className="plt-th plt-center plt-col-unit">Unit</th>
                 <th className="plt-th plt-center plt-col-qty">Quantity</th>
+                <th className="plt-th plt-col-wish" aria-label="Wishlist" />
                 <th className="plt-th plt-col-total">Total</th>
               </tr>
             </thead>
@@ -189,6 +225,65 @@ const ProductListingTable = ({ products, onAddToCart }) => {
               const img = p.images && p.images.length > 0 ? p.images[0] : FALLBACK_IMG;
               const unitOptions = p.unit_type === "with_unit" ? p.product_units || [] : [];
               const hasUnitChoice = unitOptions.length > 1;
+              const wishlisted = isWishlisted(p.id);
+
+              const renderWishlistBtn = () => (
+                <button
+                  type="button"
+                  className={`plt-wishlist-btn${wishlisted ? " is-active" : ""}${
+                    pulseId === p.id ? " is-pulse" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleWishlistToggle(p);
+                  }}
+                  aria-label={
+                    wishlisted
+                      ? `Remove ${p.name} from wishlist`
+                      : `Add ${p.name} to wishlist`
+                  }
+                  aria-pressed={wishlisted}
+                >
+                  <HeartIcon filled={wishlisted} />
+                </button>
+              );
+
+              const renderPrice = () => (
+                <span className="plt-price">${price.toFixed(2)}</span>
+              );
+
+              const renderStepper = () => (
+                <div className={`plt-stepper${qty > 0 ? " has-qty" : ""}`}>
+                  <button
+                    type="button"
+                    className="plt-stepper-btn plt-stepper-minus"
+                    onClick={() => changeQty(p.id, -1)}
+                    disabled={qty === 0}
+                    aria-label={`Decrease quantity of ${p.name}`}
+                  >
+                    &minus;
+                  </button>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    className="plt-stepper-input"
+                    value={qty}
+                    onChange={(e) => setQtyDirect(p.id, e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    aria-label={`Quantity of ${p.name}`}
+                  />
+                  <button
+                    type="button"
+                    className="plt-stepper-btn plt-stepper-plus"
+                    onClick={() => changeQty(p.id, 1)}
+                    aria-label={`Increase quantity of ${p.name}`}
+                  >
+                    +
+                  </button>
+                </div>
+              );
 
               return (
                 <tr
@@ -219,9 +314,7 @@ const ProductListingTable = ({ products, onAddToCart }) => {
                     </div>
                   </td>
 
-                  <td className="plt-td plt-col-price">
-                    <span className="plt-price">${price.toFixed(2)}</span>
-                  </td>
+                  <td className="plt-td plt-col-price plt-desktop-only">{renderPrice()}</td>
 
                   <td className="plt-td plt-center plt-col-unit">
                     {!unitOptions.length && <span className="plt-unit-none">&minus;</span>}
@@ -265,35 +358,15 @@ const ProductListingTable = ({ products, onAddToCart }) => {
                     )}
                   </td>
 
-                  <td className="plt-td plt-center plt-col-qty">
-                    <div className={`plt-stepper${qty > 0 ? " has-qty" : ""}`}>
-                      <button
-                        type="button"
-                        className="plt-stepper-btn plt-stepper-minus"
-                        onClick={() => changeQty(p.id, -1)}
-                        disabled={qty === 0}
-                        aria-label={`Decrease quantity of ${p.name}`}
-                      >
-                        &minus;
-                      </button>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className="plt-stepper-input"
-                        value={qty}
-                        onChange={(e) => setQtyDirect(p.id, e.target.value)}
-                        onFocus={(e) => e.target.select()}
-                        aria-label={`Quantity of ${p.name}`}
-                      />
-                      <button
-                        type="button"
-                        className="plt-stepper-btn plt-stepper-plus"
-                        onClick={() => changeQty(p.id, 1)}
-                        aria-label={`Increase quantity of ${p.name}`}
-                      >
-                        +
-                      </button>
+                  <td className="plt-td plt-center plt-col-qty plt-desktop-only">{renderStepper()}</td>
+
+                  <td className="plt-td plt-col-wish">
+                    <div className="plt-side-stack">
+                      {renderWishlistBtn()}
+                      <div className="plt-side-stack-mobile">
+                        {renderPrice()}
+                        {renderStepper()}
+                      </div>
                     </div>
                   </td>
 

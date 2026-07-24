@@ -301,20 +301,20 @@
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 1.35rem;
     font-weight: 500;
-    line-height: 1.15;
+    line-height: 1.25;
     color: #1c1c1c;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     letter-spacing: -0.01em;
     transition: color 0.2s ease;
   }
   
   .cart-item-meta {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem 0.65rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
   
   .cart-item-unit {
@@ -345,7 +345,7 @@
   .cart-item-qty {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 0.3rem;
     flex-shrink: 0;
   }
@@ -356,6 +356,8 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--cart-muted);
+    text-align: center;
+    width: 100%;
   }
   
   .cart-stepper {

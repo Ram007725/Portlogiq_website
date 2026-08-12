@@ -44,6 +44,30 @@ const STEPS = [
   { id: 4, label: "Review" },
 ];
 
+const WEEKDAY_INDEX = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
+
+const formatDateLabel = (date) =>
+  date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+
+const toLocalIsoDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const CheckOutPage = () => {
   const navigate = useNavigate();
   const { refreshCartCount } = useCart();
@@ -69,6 +93,9 @@ const CheckOutPage = () => {
   const [address1, setAddress1] = useState("");
   const [city, setCity] = useState("");
   const [postal, setPostal] = useState("");
+  const [deliveryDays, setDeliveryDays] = useState([]);
+  const [availableDeliveryDates, setAvailableDeliveryDates] = useState([]);
+  const [deliveryDate, setDeliveryDate] = useState("");
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -104,6 +131,7 @@ const CheckOutPage = () => {
       } catch (err) {
         console.error("User not logged in or failed to fetch user:", err);
       }
+
     };
 
     fetchUserDetails();
@@ -136,6 +164,21 @@ const CheckOutPage = () => {
       }
       return { overflowing, canScrollUp, canScrollDown };
     });
+
+
+      const deliveryDaysRes = await api.get("/api/store/order/delivery-days");
+      const days = deliveryDaysRes?.data?.delivery_days || [];
+      const normalizedDays = Array.isArray(days)
+        ? days
+            .map((day) => String(day).trim().toLowerCase())
+            .filter((day) => day in WEEKDAY_INDEX)
+        : [];
+
+      setDeliveryDays(normalizedDays);
+    } catch (err) {
+      console.error("User not logged in or failed to fetch user:", err);
+    }
+
   };
 
   useEffect(() => {
@@ -143,6 +186,7 @@ const CheckOutPage = () => {
 
     const el = summaryListRef.current;
     if (!el || typeof ResizeObserver === "undefined") return undefined;
+
 
     const observer = new ResizeObserver(() => updateSummaryScrollEdges());
     observer.observe(el);
@@ -160,9 +204,44 @@ const CheckOutPage = () => {
     }, 900);
   };
 
+  useEffect(() => {
+    if (!deliveryDays.length) {
+      setAvailableDeliveryDates([]);
+      setDeliveryDate("");
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcomingDates = [];
+
+    for (let i = 0; i < 21; i += 1) {
+      const current = new Date(today);
+      current.setDate(today.getDate() + i);
+      const weekday = current.getDay();
+
+      if (deliveryDays.some((day) => WEEKDAY_INDEX[day] === weekday)) {
+        upcomingDates.push({
+          value: toLocalIsoDate(current),
+          label: formatDateLabel(current),
+        });
+      }
+    }
+
+    setAvailableDeliveryDates(upcomingDates);
+    setDeliveryDate((prev) =>
+      upcomingDates.some((date) => date.value === prev)
+        ? prev
+        : upcomingDates[0]?.value || ""
+    );
+  }, [deliveryDays]);
+
+
+
   const handlePlaceOrder = async () => {
     try {
-      if (!firstName || !phone || !address1 || !city || !postal) {
+      if (!firstName || !phone || !address1 || !city || !postal || !deliveryDate) {
         toast.warning("Please fill all required fields!");
         return;
       }
@@ -177,6 +256,7 @@ const CheckOutPage = () => {
         address1,
         city,
         postal,
+        delivery_day: deliveryDate,
       };
 
       await api.get("/sanctum/csrf-cookie");
@@ -371,6 +451,38 @@ const CheckOutPage = () => {
                   </div>
                 </div>
               </div>
+
+
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">
+                  Delivery Date <span className="text-red-500">*</span>
+                </label>
+                {availableDeliveryDates.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {availableDeliveryDates.map((dateOption) => (
+                      <button
+                        key={dateOption.value}
+                        type="button"
+                        onClick={() => setDeliveryDate(dateOption.value)}
+                        className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
+                          deliveryDate === dateOption.value
+                            ? "border-blue-600 bg-blue-600 text-white shadow"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50"
+                        }`}
+                      >
+                        {dateOption.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    No delivery dates are available for the next three weeks.
+                  </p>
+                )}
+              </div>
+            </div>
+
 
               <aside className="checkout-summary">
                 <h2 className="checkout-summary-title">Order Summary</h2>

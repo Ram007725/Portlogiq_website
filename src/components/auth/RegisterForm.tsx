@@ -141,6 +141,7 @@ function RegisterFormInner() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [familySize, setFamilySize] = useState<number | "">("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
   const [suburb, setSuburb] = useState("");
@@ -304,6 +305,7 @@ function RegisterFormInner() {
         phone,
         email,
         password,
+        family_size: familySize === "" ? null : Number(familySize),
         address_line1: address1,
         address_line2: address2,
         city: suburb,
@@ -374,6 +376,7 @@ function RegisterFormInner() {
   const selectedState = states.find((s) => s.id === stateId);
 
   return (
+
     <div className="auth-page">
       <main className="auth-main auth-main--solo">
         <section className="auth-section">
@@ -390,7 +393,9 @@ function RegisterFormInner() {
                 <p className="auth-lead">
                   Join Portlogiq to shop fresh local produce. We&apos;ll verify your card securely for seamless checkout.
                 </p>
+
               </div>
+
 
               <div className="auth-register-card">
                 <div className="auth-register-head">
@@ -667,6 +672,28 @@ function RegisterFormInner() {
                   </p>
                 </div>
               </div>
+=======
+          {/* Family Size */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label>Family Size</label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={familySize}
+                onChange={(e) =>
+                  setFamilySize(e.target.value === "" ? "" : Number(e.target.value))
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g. 4"
+              />
+              {errors.family_size && <p className="text-red-500">{errors.family_size[0]}</p>}
+            </div>
+          </div>
+
+        
             </div>
           </div>
         </section>

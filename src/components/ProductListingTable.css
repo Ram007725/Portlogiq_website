@@ -1,0 +1,1202 @@
+/* Modern product listing table.
+   Written as plain CSS (not Tailwind utility classes) because this project's
+   Tailwind output (public/output.css) is a static, precompiled file that is not
+   regenerated on build -- brand-new utility classes would silently render unstyled.
+   Typography matches Home: DM Sans (UI) + Cormorant Garamond (headings). */
+
+.plt-page {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #3d3d3d;
+  -webkit-font-smoothing: antialiased;
+}
+
+.plt-listing {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Room at the bottom so the fixed summary dock never overlaps the last
+     table row once the page is scrolled past the product list. */
+  padding-bottom: 108px;
+}
+
+.plt-wrapper {
+  background: #ffffff;
+  border: 1px solid #e8ebe9;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 16px 36px -18px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+
+/* Only ever scrolls horizontally (for narrow screens) -- the page itself is the
+   single scroll surface, with more rows fetched a page at a time via the
+   "Load More" control below the table instead of an ever-growing nested
+   scroll area. This avoids the double-scrollbar problem of an inner scroll
+   region competing with the outer page scroll. */
+.plt-scroll {
+  overflow-x: auto;
+}
+
+.plt-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+  transition: min-width 0.2s ease;
+}
+
+.plt-thead tr {
+  background: linear-gradient(180deg, #f7f9f8 0%, #f1f5f3 100%);
+  border-bottom: 1px solid #e2e8e4;
+}
+
+.plt-th {
+  padding: 16px 22px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.plt-th.plt-center,
+.plt-td.plt-center {
+  text-align: center;
+}
+
+.plt-col-unit {
+  min-width: 120px;
+}
+
+.plt-row {
+  border-bottom: 1px solid #f1f4f2;
+  transition: background-color 0.2s ease;
+  animation: plt-fade-in 0.45s ease both;
+  /* A tap/long-press anywhere in the row (not just the product cell) was still
+     able to start a native text selection that drags across the whole row --
+     highlighting text and drawing a selection ring around the
+     thumbnail image. None of this row's content is meant to be selectable. */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.plt-row:last-child {
+  border-bottom: none;
+}
+
+/* Selected rows (quantity > 0) get a clear green tint so shoppers can see at a
+   glance which products are already in their cart-to-be, without hunting for
+   the small stepper value in every row. */
+.plt-row.selected {
+  background-color: #e8f2ec;
+}
+
+.plt-row.selected .plt-td:first-child {
+  box-shadow: inset 3px 0 0 0 #3d6b4f;
+}
+
+.plt-td {
+  padding: 14px 22px;
+  vertical-align: middle;
+  transition: box-shadow 0.2s ease;
+}
+
+.plt-td.plt-col-product {
+  /* Prefer wrapping long names inside this column over expanding the table. */
+  width: 32%;
+  min-width: 200px;
+}
+
+.plt-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plt-name,
+.plt-id {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.plt-thumb {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f3f5f3;
+  border: 1px solid #edf0ee;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
+  transition: box-shadow 0.25s ease;
+}
+
+.plt-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+  display: block;
+}
+
+.plt-col-wish {
+  width: 52px;
+  text-align: center;
+}
+
+.plt-td.plt-col-wish {
+  padding-left: 4px;
+  padding-right: 16px;
+  width: 52px;
+}
+
+.plt-th.plt-col-wish {
+  padding-left: 4px;
+  padding-right: 16px;
+}
+
+.plt-td.plt-col-qty,
+.plt-th.plt-col-qty {
+  padding-right: 4px;
+}
+
+.plt-side-stack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plt-side-stack-mobile {
+  display: none;
+}
+
+.plt-wishlist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #e2e8e4;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b7c6f;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1),
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.22s ease;
+}
+
+.plt-wishlist-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  transition: transform 0.22s ease;
+}
+
+.plt-wishlist-btn.is-active {
+  color: #3d6b4f;
+  background: #e8f2ec;
+  border-color: #b8d4c3;
+  box-shadow: 0 3px 10px rgba(61, 107, 79, 0.22);
+}
+
+.plt-wishlist-btn:active {
+  transform: scale(0.9);
+}
+
+.plt-wishlist-btn.is-pulse {
+  animation: plt-wishlist-pulse 0.42s ease;
+}
+
+.plt-wishlist-btn:focus-visible {
+  outline: 2px solid #3d6b4f;
+  outline-offset: 2px;
+}
+
+@keyframes plt-wishlist-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.plt-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.plt-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1c1c1c;
+  text-decoration: none;
+  /* Let long titles wrap onto a second line on desktop instead of
+     staying on one cramped line (or truncating with an ellipsis). */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.35;
+  max-width: 22rem;
+}
+
+.plt-id {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #97a3b6;
+}
+
+.plt-price {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: #3d6b4f;
+  letter-spacing: -0.01em;
+}
+
+.plt-col-total {
+  min-width: 100px;
+}
+
+.plt-row-total {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: #1c1c1c;
+  letter-spacing: -0.01em;
+}
+
+.plt-row-total.is-zero {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.plt-unit-none {
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.plt-unit-static {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3d6b4f;
+  background: #e8f2ec;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.plt-unit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background: #f1f5f3;
+  border-radius: 999px;
+}
+
+.plt-unit-pill {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.plt-unit-pill.active {
+  background: #fff;
+  color: #3d6b4f;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+.plt-unit-select {
+  display: inline-block;
+  appearance: none;
+  background: #f1f5f3 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+  background-size: 13px;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 26px 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  max-width: 170px;
+}
+
+.plt-unit-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.18);
+}
+
+.plt-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plt-stepper-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f9f8;
+  color: #334155;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.plt-stepper-btn:active:not(:disabled) {
+  transform: scale(0.88);
+}
+
+.plt-stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.plt-stepper.has-qty {
+  border-color: #b8d4c3;
+  box-shadow: 0 2px 8px -2px rgba(61, 107, 79, 0.25);
+}
+
+.plt-stepper-input {
+  width: 36px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1c1c1c;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  /* Overrides the row-level user-select: none so this input stays normally
+     editable/selectable for typing a quantity directly. */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.plt-stepper-input:focus {
+  outline: none;
+}
+
+/* Firefox shows number-input spinners even for text-mode fields on some builds --
+   keep the control visually identical to the other browsers. */
+.plt-stepper-input::-webkit-outer-spin-button,
+.plt-stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* --- Grand Total summary bar: the running total + Add to Cart action for the
+   whole selection. Fixed to the bottom of the viewport so it stays within easy
+   reach while browsing. A scroll listener in ProductListingTable.jsx lifts
+   `bottom` as the page footer enters the screen, so the bar rides just above
+   the footer instead of covering (or disappearing behind) it. */
+
+.plt-summary-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px calc(18px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+  /* bottom is driven by JS on scroll — keep it snap-synced, not CSS-animated */
+  will-change: bottom;
+  animation: plt-dock-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A soft upward scrim behind the dock so the floating card always reads
+   clearly against whatever product rows happen to be scrolled underneath it. */
+.plt-summary-dock::before {
+  content: "";
+  position: absolute;
+  inset: -28px 0 0;
+  background: linear-gradient(180deg, rgba(247, 249, 248, 0) 0%, rgba(247, 249, 248, 0.92) 60%, #f7f9f8 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.plt-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1232px;
+  padding: 18px 24px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid #e8ebe9;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 44px -16px rgba(15, 23, 42, 0.24);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  pointer-events: auto;
+}
+
+.plt-summary.has-selection {
+  border-color: #b8d4c3;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 24px 48px -16px rgba(61, 107, 79, 0.32);
+}
+
+@keyframes plt-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.plt-summary-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+
+.plt-summary-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.plt-summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e8f2ec 0%, #d4ebe0 100%);
+  color: #3d6b4f;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.plt-summary.has-selection .plt-summary-icon {
+  background: linear-gradient(135deg, #3d6b4f 0%, #1a2e22 100%);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.plt-summary-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.plt-summary-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plt-summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.plt-summary-meta {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plt-summary-total {
+  flex-shrink: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1c1c1c;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.plt-summary-total.is-zero {
+  color: #cbd5e1;
+}
+
+.plt-summary.has-selection .plt-summary-total {
+  color: #1a2e22;
+}
+
+.plt-bulk-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #3d6b4f 0%, #1a2e22 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 13px 26px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 22px -8px rgba(61, 107, 79, 0.55);
+}
+
+.plt-bulk-add-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.plt-bulk-add-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.plt-bulk-add-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+@keyframes plt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plt-row,
+  .plt-summary-dock,
+  .plt-wishlist-btn.is-pulse {
+    animation: none;
+  }
+
+  .plt-wishlist-btn,
+  .plt-wishlist-icon {
+    transition: none;
+  }
+}
+
+/* Below this width, rows switch from a horizontally-scrolling table to stacked
+   cards. Quantity is the primary way to interact with each row, and having to
+   scroll sideways to even reach the stepper was the core problem -- cards put
+   product, price, unit and quantity all on-screen at once, no scrolling needed. */
+@media (max-width: 768px) {
+  .plt-scroll {
+    overflow-x: visible;
+  }
+
+  .plt-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .plt-thead {
+    display: none;
+  }
+
+  .plt-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .plt-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "product wish"
+      "unit   wish";
+    column-gap: 14px;
+    row-gap: 12px;
+    padding: 16px;
+    position: relative;
+    /* Swap the flat 1px table border for a soft gradient line with a small
+       centered dot -- reads as an intentional, stylish separator between
+       stacked product cards instead of leftover table chrome. */
+    border-bottom: none;
+    animation: plt-fade-in 0.45s ease both;
+    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+      margin 0.2s ease, border-radius 0.2s ease;
+  }
+
+  .plt-row:not(:last-child):not(.selected)::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #d4ebe0 12%,
+      #8fb89e 50%,
+      #d4ebe0 88%,
+      transparent 100%
+    );
+  }
+
+  .plt-row:not(:last-child):not(.selected)::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #8fb89e;
+    box-shadow: 0 0 0 3px #ffffff;
+    z-index: 1;
+  }
+
+  /* Selected cards "pop out" of the plain list into their own rounded, bordered
+     tile with a richer accent gradient + glow -- a flat tint alone read as barely
+     different from the white background, so this leans into contrast instead. */
+  .plt-row.selected {
+    background: linear-gradient(135deg, #e8f2ec 0%, #d4ebe0 100%);
+    margin: 6px 8px;
+    border: 1.5px solid #b8d4c3;
+    border-bottom: 1.5px solid #b8d4c3;
+    border-radius: 16px;
+    box-shadow: 0 10px 22px -10px rgba(61, 107, 79, 0.45), 0 0 0 1px rgba(61, 107, 79, 0.06);
+  }
+
+  /* Cancel the desktop-only inset accent bar -- it reads as a stray line poking
+     out of the new rounded card border rather than a clean signal. */
+  .plt-row.selected .plt-td:first-child {
+    box-shadow: none;
+  }
+
+  /* The inset accent bar from the desktop table doesn't suit a rounded, bordered
+     card, so it's swapped for a small checkmark badge on the thumbnail instead --
+     an unmistakable "this one is in your order" signal. */
+  .plt-row.selected .plt-thumb {
+    box-shadow: 0 0 0 2px #3d6b4f, 0 6px 14px -4px rgba(61, 107, 79, 0.45);
+  }
+
+  .plt-row.selected .plt-thumb::after {
+    content: "\2713";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: #3d6b4f;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+  }
+
+  .plt-td {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+  }
+
+  .plt-td.plt-col-product {
+    grid-area: product;
+    min-width: 0;
+    width: auto;
+    padding-right: 8px;
+  }
+
+  .plt-td.plt-col-wish {
+    grid-area: wish;
+    justify-content: flex-end;
+    align-self: start;
+    width: auto;
+    padding: 0;
+  }
+
+  .plt-side-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .plt-side-stack-mobile {
+    display: contents;
+  }
+
+  .plt-desktop-only {
+    display: none !important;
+  }
+
+  .plt-td.plt-col-unit {
+    grid-area: unit;
+    justify-content: flex-start;
+    text-align: left;
+    padding-left: 0;
+    align-self: end;
+  }
+
+  /* The card layout already surfaces a running total in the summary bar below
+     the list, so the dedicated Total column (a desktop-table-only affordance)
+     is redundant here and would otherwise need its own grid area. */
+  .plt-td.plt-col-total {
+    display: none;
+  }
+
+  .plt-wishlist-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .plt-wishlist-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .plt-product-cell {
+    min-width: 0;
+  }
+
+  .plt-name {
+    max-width: none;
+  }
+
+  .plt-price {
+    font-size: 1.05rem;
+  }
+
+  /* The stepper now owns its own row instead of a cramped table column, so it can
+     be bigger, friendlier to tap, and directly editable. */
+  .plt-stepper {
+    border-radius: 14px;
+    border-width: 1.5px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  }
+
+  .plt-stepper.has-qty {
+    background: #e8f2ec;
+    border-color: #8fb89e;
+  }
+
+  .plt-stepper-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+    background: transparent;
+  }
+
+  .plt-stepper.has-qty .plt-stepper-btn {
+    color: #3d6b4f;
+  }
+
+  .plt-stepper-input {
+    width: 38px;
+    font-size: 1.05rem;
+    color: #1c1c1c;
+  }
+
+  /* No point showing a placeholder dash for unit-less products once the unit
+     cell has its own dedicated spot in the card -- an empty cell reads as
+     "not applicable" just as clearly, with less visual noise. */
+  .plt-unit-none {
+    display: none;
+  }
+
+  .plt-unit-select {
+    max-width: 150px;
+  }
+
+  .plt-listing {
+    gap: 16px;
+    /* The docked summary stacks into two rows on narrow screens (taller), so
+       it needs more clearance than the desktop single-row bar. */
+    padding-bottom: 168px;
+  }
+
+  .plt-summary-dock {
+    padding: 0 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .plt-summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 18px;
+  }
+
+  /* Always: Grand Total on the left, Total Amount fixed on the right. */
+  .plt-summary-top {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .plt-summary-total {
+    padding-left: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .plt-bulk-add-btn {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    justify-content: center;
+    padding: 14px 22px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .plt-row {
+    padding: 14px;
+    column-gap: 10px;
+    row-gap: 12px;
+  }
+
+  .plt-thumb {
+    width: 46px;
+    height: 46px;
+  }
+
+  .plt-wishlist-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .plt-wishlist-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .plt-name {
+    font-size: 0.9rem;
+    max-width: none;
+  }
+
+  .plt-price {
+    font-size: 1rem;
+  }
+
+  .plt-stepper-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+
+  .plt-stepper-input {
+    width: 32px;
+    font-size: 1rem;
+  }
+
+  .plt-unit-select {
+    max-width: 120px;
+    font-size: 0.7rem;
+  }
+
+  .plt-listing {
+    padding-bottom: 178px;
+  }
+
+  .plt-summary {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .plt-summary-total {
+    font-size: 1.28rem;
+  }
+
+  .plt-bulk-add-btn {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* --- Page-level chrome shared by Shop & Collection listing pages --- */
+
+.plt-page-section {
+  background: #f7f9f8;
+}
+
+.plt-listing-intro {
+  margin-bottom: 20px;
+}
+
+.plt-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plt-page-head h2 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #1c1c1c;
+}
+
+.plt-page-sub {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #6b6b6b;
+  line-height: 1.35;
+}
+
+.plt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 5px 12px 5px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e8f2ec 0%, #d4ebe0 100%);
+  border: 1px solid #d4ebe0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3d6b4f;
+  box-shadow: 0 1px 2px rgba(61, 107, 79, 0.06);
+}
+
+.plt-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3d6b4f;
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.16);
+}
+
+@media (max-width: 640px) {
+  .plt-listing-intro {
+    margin-bottom: 14px;
+  }
+
+  .plt-page-head {
+    align-items: flex-start;
+    text-align: left;
+    gap: 6px;
+  }
+
+  .plt-page-head h2 {
+    font-size: 1.65rem;
+    line-height: 1.2;
+  }
+
+  .plt-page-sub {
+    font-size: 0.82rem;
+  }
+
+  .plt-eyebrow {
+    font-size: 0.64rem;
+    padding: 4px 10px 4px 8px;
+  }
+}
+
+.plt-sort-select {
+  appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  background-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 38px 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+  min-width: 190px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.plt-sort-select:focus {
+  outline: none;
+  border-color: #3d6b4f;
+  box-shadow: 0 0 0 3px rgba(61, 107, 79, 0.15);
+}
+
+/* Themed scrollbar for the table's own horizontal scroll area, so the "scroll for
+   more columns" affordance on narrow screens looks intentional rather than like a
+   bare OS scrollbar. */
+.plt-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #b8d4c3 #f1f5f3;
+}
+
+.plt-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.plt-scroll::-webkit-scrollbar-track {
+  background: #f1f5f3;
+}
+
+.plt-scroll::-webkit-scrollbar-thumb {
+  background: #b8d4c3;
+  border-radius: 999px;
+}
+
+.plt-scroll::-webkit-scrollbar-thumb:hover {
+  background: #8fb89e;
+}
+
+/* Themed page scrollbar while browsing an infinite-scroll listing page (Shop /
+   Collection) -- toggled on <body> for the lifetime of those pages only, see
+   their useEffect cleanup. */
+body.plt-scroll-theme {
+  scrollbar-width: thin;
+  scrollbar-color: #8fb89e #eef2ef;
+}
+
+body.plt-scroll-theme::-webkit-scrollbar {
+  width: 11px;
+}
+
+body.plt-scroll-theme::-webkit-scrollbar-track {
+  background: #eef2ef;
+}
+
+body.plt-scroll-theme::-webkit-scrollbar-thumb {
+  background: #8fb89e;
+  border-radius: 999px;
+  border: 2px solid #eef2ef;
+}
+
+body.plt-scroll-theme::-webkit-scrollbar-thumb:hover {
+  background: #8fb89e;
+}
+
+/* All the row/thumbnail/button ":hover" polish below is gated to devices that
+   actually have a mouse. Touch screens don't have real hover -- browsers fake
+   it by applying :hover on tap and then leaving it "stuck" until something
+   else is tapped, which showed up as a lingering accent line/glow on the row
+   and thumbnail after tapping a product. Real click/tap behavior (active
+   states, selected rows, focus rings, navigation) is untouched. */
+@media (hover: hover) {
+  .plt-row:hover {
+    background-color: #f7f9f8;
+  }
+
+  .plt-row.selected:hover {
+    background-color: #d4ebe0;
+  }
+
+  .plt-row:hover .plt-td:first-child {
+    box-shadow: inset 3px 0 0 0 #3d6b4f;
+  }
+
+  .plt-row:hover .plt-thumb {
+    box-shadow: 0 6px 14px -4px rgba(61, 107, 79, 0.28);
+  }
+
+  .plt-row:hover .plt-thumb img {
+    transform: scale(1.08);
+  }
+
+  .plt-name:hover {
+    color: #3d6b4f;
+  }
+
+  .plt-unit-pill:hover {
+    color: #3d6b4f;
+  }
+
+  .plt-wishlist-btn:hover {
+    color: #3d6b4f;
+    background: #fff;
+    border-color: #b8d4c3;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(61, 107, 79, 0.22);
+  }
+
+  .plt-wishlist-btn.is-active:hover {
+    color: #1a2e22;
+    background: #d4ebe0;
+  }
+
+  .plt-stepper-btn:hover:not(:disabled) {
+    background: #e8f2ec;
+    color: #3d6b4f;
+  }
+
+  .plt-bulk-add-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px -10px rgba(61, 107, 79, 0.6);
+  }
+
+  .plt-sort-select:hover {
+    border-color: #cbd5e1;
+  }
+}
+
+@media (hover: hover) and (max-width: 768px) {
+  .plt-stepper-btn:hover:not(:disabled) {
+    background: #d4ebe0;
+  }
+}

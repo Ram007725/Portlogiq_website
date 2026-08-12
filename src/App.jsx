@@ -5,10 +5,11 @@ import Shop from './pages/Shop.jsx';
 import CheckOut from './pages/CheckOut.jsx';
 import Product from './pages/Product.jsx';
 import IndexPage from './pages/Index.jsx';
+import Home from './pages/Home.jsx';
 import CartPage from './pages/cart.jsx';
 import ThankYouPage from './pages/ThankYouPage.jsx';
-import SignInPage from './components/auth/SignInForm.jsx';
-import RegisterPage from './components/auth/RegisterForm.jsx';
+import SignInPage from './components/auth/SignInForm';
+import RegisterPage from './components/auth/RegisterForm';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { ToastContainer } from 'react-toastify';
@@ -27,11 +28,22 @@ function App() {
   return (
     <>
       <ToastContainer
-        style={{ marginTop: "4.5rem", zIndex: 9999 }} 
+        style={{ marginTop: "4.5rem", zIndex: 9999 }}
+        position="top-right"
+        autoClose={3200}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="light"
+        toastClassName="brand-toast"
+        bodyClassName="brand-toast__body"
       />
       <Router>
         <Routes>
-          <Route path="/" element={<IndexPage />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/store" element={<IndexPage />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<CartPage />} />

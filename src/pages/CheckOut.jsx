@@ -1,11 +1,48 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import FooterPage from "../components/FooterPage.jsx";
 import HeaderPage from "../components/HeaderPage.jsx";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import "./checkout.css";
+
+const FALLBACK_IMG = "/img/default.png";
+
+const CheckoutIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const ArrowIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+  </svg>
+);
+
+const BackArrowIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+  </svg>
+);
+
+const STEPS = [
+  { id: 1, label: "Cart" },
+  { id: 2, label: "Shipping" },
+  { id: 3, label: "Payment" },
+  { id: 4, label: "Review" },
+];
 
 const WEEKDAY_INDEX = {
   sunday: 0,
@@ -34,11 +71,20 @@ const toLocalIsoDate = (date) => {
 const CheckOutPage = () => {
   const navigate = useNavigate();
   const { refreshCartCount } = useCart();
+  const summaryListRef = useRef(null);
+  const scrollHideTimerRef = useRef(null);
 
   const [items, setItems] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
   const [shipping] = useState(10.0);
   const [total, setTotal] = useState(0);
+  const [placing, setPlacing] = useState(false);
+  const [summaryScrolling, setSummaryScrolling] = useState(false);
+  const [summaryScrollEdges, setSummaryScrollEdges] = useState({
+    overflowing: false,
+    canScrollUp: false,
+    canScrollDown: false,
+  });
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -70,18 +116,55 @@ const CheckOutPage = () => {
   }, []);
 
   useEffect(() => {
-  const fetchUserDetails = async () => {
-    try {
-      await api.get("/sanctum/csrf-cookie"); 
-      const res = await api.get("/api/auth/check"); 
-      
-      if (res.data) {
-        const user = res.data;
-        setFirstName(user.first_name || "");
-        setLastName(user.last_name || "");
-        setEmail(user.email || "");
-        setPhone(user.phone || "");
+    const fetchUserDetails = async () => {
+      try {
+        await api.get("/sanctum/csrf-cookie");
+        const res = await api.get("/api/auth/check");
+
+        if (res.data) {
+          const user = res.data;
+          setFirstName(user.first_name || "");
+          setLastName(user.last_name || "");
+          setEmail(user.email || "");
+          setPhone(user.phone || "");
+        }
+      } catch (err) {
+        console.error("User not logged in or failed to fetch user:", err);
       }
+
+    };
+
+    fetchUserDetails();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollHideTimerRef.current) {
+        clearTimeout(scrollHideTimerRef.current);
+      }
+    };
+  }, []);
+
+  const updateSummaryScrollEdges = () => {
+    const el = summaryListRef.current;
+    if (!el) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const overflowing = scrollHeight > clientHeight + 1;
+    const canScrollUp = overflowing && scrollTop > 2;
+    const canScrollDown = overflowing && scrollTop + clientHeight < scrollHeight - 2;
+
+    setSummaryScrollEdges((prev) => {
+      if (
+        prev.overflowing === overflowing &&
+        prev.canScrollUp === canScrollUp &&
+        prev.canScrollDown === canScrollDown
+      ) {
+        return prev;
+      }
+      return { overflowing, canScrollUp, canScrollDown };
+    });
+
 
       const deliveryDaysRes = await api.get("/api/store/order/delivery-days");
       const days = deliveryDaysRes?.data?.delivery_days || [];
@@ -95,10 +178,31 @@ const CheckOutPage = () => {
     } catch (err) {
       console.error("User not logged in or failed to fetch user:", err);
     }
+
   };
 
-  fetchUserDetails();
-}, []);
+  useEffect(() => {
+    updateSummaryScrollEdges();
+
+    const el = summaryListRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+
+
+    const observer = new ResizeObserver(() => updateSummaryScrollEdges());
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [items]);
+
+  const handleSummaryScroll = () => {
+    updateSummaryScrollEdges();
+    setSummaryScrolling(true);
+    if (scrollHideTimerRef.current) {
+      clearTimeout(scrollHideTimerRef.current);
+    }
+    scrollHideTimerRef.current = setTimeout(() => {
+      setSummaryScrolling(false);
+    }, 900);
+  };
 
   useEffect(() => {
     if (!deliveryDays.length) {
@@ -134,12 +238,15 @@ const CheckOutPage = () => {
   }, [deliveryDays]);
 
 
+
   const handlePlaceOrder = async () => {
     try {
       if (!firstName || !phone || !address1 || !city || !postal || !deliveryDate) {
         toast.warning("Please fill all required fields!");
         return;
       }
+
+      setPlacing(true);
 
       const payload = {
         first_name: firstName,
@@ -152,7 +259,6 @@ const CheckOutPage = () => {
         delivery_day: deliveryDate,
       };
 
-      // Sanctum CSRF token
       await api.get("/sanctum/csrf-cookie");
 
       const res = await api.post("/api/store/order/place", payload);
@@ -161,141 +267,192 @@ const CheckOutPage = () => {
         setItems([]);
         refreshCartCount();
         toast.success("Order placed successfully!");
-        navigate(`/thankyou/${res.data.order_number}`); 
+        navigate(`/thankyou/${res.data.order_number}`);
       } else {
         toast.error("Failed to place order. Try again.");
       }
     } catch (error) {
       console.error("Order placing failed:", error);
-      // toast.error("Something went wrong while placing the order.");
+    } finally {
+      setPlacing(false);
     }
   };
 
+  const itemCount = items.length;
+
   return (
-    <div>
+    <div className="checkout-page">
       <HeaderPage />
 
-      {/* Checkout Section */}
-      <section className="max-w-7xl mx-auto px-6 py-12 mt-11">
-        {/* Step Progress Bar */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center relative">
-            {[1, 2, 3, 4].map((step) => (
-              <div key={step} className="flex-1 flex flex-col items-center relative">
-                <div
-                  className={`w-10 h-10 flex items-center justify-center rounded-full font-bold z-10 ${
-                    step <= 2
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600"
-                  }`}
-                >
-                  {step}
+      <main className="checkout-main">
+        <section className="checkout-section">
+          <div className="checkout-container">
+            <div className="checkout-intro">
+              <p className="checkout-eyebrow">Secure checkout</p>
+              <h1 className="checkout-title">
+                <span className="checkout-title-icon" aria-hidden="true">
+                  <CheckoutIcon />
+                </span>
+                Checkout
+              </h1>
+              <p className="checkout-lead">
+                Confirm your shipping details and place your order. Fresh produce packed with care.
+              </p>
+            </div>
+
+            <nav className="checkout-steps" aria-label="Checkout progress">
+              {STEPS.map((step) => {
+                const status =
+                  step.id < 2 ? "is-done" : step.id === 2 ? "is-current" : "";
+                return (
+                  <div key={step.id} className={`checkout-step ${status}`}>
+                    <span className="checkout-step-dot" aria-hidden="true">
+                      {step.id < 2 ? <CheckIcon /> : step.id}
+                    </span>
+                    <p className="checkout-step-label">{step.label}</p>
+                  </div>
+                );
+              })}
+            </nav>
+
+            <div className="checkout-layout">
+              <div className="checkout-panel">
+                <div className="checkout-panel-head">
+                  <div className="checkout-panel-head-copy">
+                    <span className="checkout-panel-label">Shipping</span>
+                    <span className="checkout-panel-hint">Where should we deliver your order?</span>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm font-medium text-gray-700">
-                  {["Cart", "Shipping", "Payment", "Review"][step - 1]}
-                </p>
-                {step !== 4 && (
-                  <div className="absolute top-5 left-1/2 w-full h-1 bg-gray-200 -z-0"></div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Main Checkout Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Side - Form */}
-          <div className="lg:col-span-2 bg-white p-16 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-6">Checkout</h2>
-            <h3 className="text-lg font-semibold mb-4">Shipping Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
+                <div className="checkout-panel-body">
+                  <p className="checkout-section-label">Contact &amp; delivery</p>
+
+                  <div className="checkout-grid checkout-grid-2">
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-first-name">
+                        First Name<span className="checkout-required">*</span>
+                      </label>
+                      <input
+                        id="co-first-name"
+                        type="text"
+                        placeholder="First Name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="given-name"
+                      />
+                    </div>
+
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-last-name">
+                        Last Name
+                      </label>
+                      <input
+                        id="co-last-name"
+                        type="text"
+                        placeholder="Last Name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="family-name"
+                      />
+                    </div>
+
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-email">
+                        Email
+                      </label>
+                      <input
+                        id="co-email"
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="email"
+                      />
+                    </div>
+
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-phone">
+                        Phone Number<span className="checkout-required">*</span>
+                      </label>
+                      <input
+                        id="co-phone"
+                        type="tel"
+                        placeholder="Phone Number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="tel"
+                      />
+                    </div>
+
+                    <div className="checkout-field checkout-field-span">
+                      <label className="checkout-label" htmlFor="co-address">
+                        Address<span className="checkout-required">*</span>
+                      </label>
+                      <input
+                        id="co-address"
+                        type="text"
+                        placeholder="Address Line 1"
+                        value={address1}
+                        onChange={(e) => setAddress1(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="street-address"
+                      />
+                    </div>
+
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-city">
+                        City<span className="checkout-required">*</span>
+                      </label>
+                      <input
+                        id="co-city"
+                        type="text"
+                        placeholder="City"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="address-level2"
+                      />
+                    </div>
+
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="co-postal">
+                        Postal Code<span className="checkout-required">*</span>
+                      </label>
+                      <input
+                        id="co-postal"
+                        type="text"
+                        placeholder="Postal Code"
+                        value={postal}
+                        onChange={(e) => setPostal(e.target.value)}
+                        className="checkout-input"
+                        autoComplete="postal-code"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="checkout-actions">
+                    <button
+                      type="button"
+                      onClick={handlePlaceOrder}
+                      className="checkout-submit"
+                      disabled={placing || items.length === 0}
+                    >
+                      {placing ? "Placing order…" : "Place Order"}
+                      {!placing && <ArrowIcon />}
+                    </button>
+                    <Link to="/cart" className="checkout-back">
+                      <BackArrowIcon />
+                      Back to cart
+                    </Link>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Last Name</label>
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">
-                  Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Address Line 1"
-                  value={address1}
-                  onChange={(e) => setAddress1(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
-
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="City"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Postal Code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  value={postal}
-                  onChange={(e) => setPostal(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                />
-              </div>
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
@@ -326,55 +483,89 @@ const CheckOutPage = () => {
               </div>
             </div>
 
-            <button
-              onClick={handlePlaceOrder}
-              className="mt-8 w-32 bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700"
-            >
-              Place Order
-            </button>
-          </div>
 
-          {/* Right Side - Summary */}
-          <div className="bg-gray-50 p-16 rounded-lg shadow">
-            <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+              <aside className="checkout-summary">
+                <h2 className="checkout-summary-title">Order Summary</h2>
 
-            {items.length === 0 ? (
-              <p className="text-gray-500">No items in cart.</p>
-            ) : (
-              items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src={item.img}
-                      alt={item.name}
-                      className="w-16 h-16 rounded object-cover"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900">{item.name}</p>
-                      {item.unit_name !== "No Unit" && (
-                        <p className="text-sm text-gray-500">{item.unit_name}</p>
-                      )}
-                      <p className="text-sm text-gray-500">Qty: {item.qty}</p>
+                {items.length === 0 ? (
+                  <p className="checkout-summary-empty">No items in cart.</p>
+                ) : (
+                  <div
+                    className={[
+                      "checkout-summary-scroll",
+                      summaryScrollEdges.overflowing ? "is-overflowing" : "",
+                      summaryScrollEdges.canScrollUp ? "can-scroll-up" : "",
+                      summaryScrollEdges.canScrollDown ? "can-scroll-down" : "",
+                      summaryScrolling ? "is-scrolling" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <div className="checkout-summary-fade checkout-summary-fade--top" aria-hidden="true" />
+                    <div className="checkout-summary-fade checkout-summary-fade--bottom" aria-hidden="true" />
+                    <div
+                      ref={summaryListRef}
+                      className={`checkout-summary-list${summaryScrolling ? " is-scrolling" : ""}`}
+                      onScroll={handleSummaryScroll}
+                    >
+                      {items.map((item) => {
+                        const showUnit = item.unit_name && item.unit_name !== "No Unit";
+                        return (
+                          <div key={item.id} className="checkout-summary-item">
+                            <div className="checkout-summary-thumb">
+                              <img
+                                src={item.img || FALLBACK_IMG}
+                                alt={item.name}
+                                onError={(e) => {
+                                  if (!e.currentTarget.src.endsWith(FALLBACK_IMG)) {
+                                    e.currentTarget.src = FALLBACK_IMG;
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div className="checkout-summary-info">
+                              <p className="checkout-summary-name">{item.name}</p>
+                              <p className="checkout-summary-meta">
+                                {showUnit ? `${item.unit_name} · ` : ""}
+                                Qty {item.qty}
+                              </p>
+                            </div>
+                            <p className="checkout-summary-line">
+                              ${(item.price * item.qty).toFixed(2)}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <p className="text-gray-700">${(item.price * item.qty).toFixed(2)}</p>
-                </div>
-              ))
-            )}
+                )}
 
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between text-gray-700">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-gray-900">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
+                <div className="checkout-summary-rows">
+                  <div className="checkout-summary-row">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="checkout-summary-row">
+                    <span>Items</span>
+                    <span>{itemCount}</span>
+                  </div>
+                </div>
+
+                <hr className="checkout-summary-divider" />
+
+                <div className="checkout-summary-total">
+                  <span className="checkout-summary-total-label">Total</span>
+                  <span className="checkout-summary-total-value">${total.toFixed(2)}</span>
+                </div>
+
+                <p className="checkout-summary-note">
+                  Secure checkout · Fresh produce packed with care
+                </p>
+              </aside>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <FooterPage />
     </div>

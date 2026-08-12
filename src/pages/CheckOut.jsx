@@ -164,22 +164,27 @@ const CheckOutPage = () => {
       }
       return { overflowing, canScrollUp, canScrollDown };
     });
-
-
-      const deliveryDaysRes = await api.get("/api/store/order/delivery-days");
-      const days = deliveryDaysRes?.data?.delivery_days || [];
-      const normalizedDays = Array.isArray(days)
-        ? days
-            .map((day) => String(day).trim().toLowerCase())
-            .filter((day) => day in WEEKDAY_INDEX)
-        : [];
-
-      setDeliveryDays(normalizedDays);
-    } catch (err) {
-      console.error("User not logged in or failed to fetch user:", err);
-    }
-
   };
+
+  useEffect(() => {
+    const fetchDeliveryDays = async () => {
+      try {
+        const deliveryDaysRes = await api.get("/api/store/order/delivery-days");
+        const days = deliveryDaysRes?.data?.delivery_days || [];
+        const normalizedDays = Array.isArray(days)
+          ? days
+              .map((day) => String(day).trim().toLowerCase())
+              .filter((day) => day in WEEKDAY_INDEX)
+          : [];
+
+        setDeliveryDays(normalizedDays);
+      } catch (err) {
+        console.error("Failed to fetch delivery days:", err);
+      }
+    };
+
+    fetchDeliveryDays();
+  }, []);
 
   useEffect(() => {
     updateSummaryScrollEdges();
@@ -434,6 +439,34 @@ const CheckOutPage = () => {
                     </div>
                   </div>
 
+                  <div className="checkout-field checkout-field-span">
+                    <label className="checkout-label">
+                      Delivery Date<span className="checkout-required">*</span>
+                    </label>
+                    {availableDeliveryDates.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {availableDeliveryDates.map((dateOption) => (
+                          <button
+                            key={dateOption.value}
+                            type="button"
+                            onClick={() => setDeliveryDate(dateOption.value)}
+                            className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
+                              deliveryDate === dateOption.value
+                                ? "border-blue-600 bg-blue-600 text-white shadow"
+                                : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50"
+                            }`}
+                          >
+                            {dateOption.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        No delivery dates are available for the next three weeks.
+                      </p>
+                    )}
+                  </div>
+
                   <div className="checkout-actions">
                     <button
                       type="button"
@@ -451,38 +484,6 @@ const CheckOutPage = () => {
                   </div>
                 </div>
               </div>
-
-
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Delivery Date <span className="text-red-500">*</span>
-                </label>
-                {availableDeliveryDates.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {availableDeliveryDates.map((dateOption) => (
-                      <button
-                        key={dateOption.value}
-                        type="button"
-                        onClick={() => setDeliveryDate(dateOption.value)}
-                        className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
-                          deliveryDate === dateOption.value
-                            ? "border-blue-600 bg-blue-600 text-white shadow"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50"
-                        }`}
-                      >
-                        {dateOption.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    No delivery dates are available for the next three weeks.
-                  </p>
-                )}
-              </div>
-            </div>
-
 
               <aside className="checkout-summary">
                 <h2 className="checkout-summary-title">Order Summary</h2>

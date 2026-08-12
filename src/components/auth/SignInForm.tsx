@@ -72,7 +72,7 @@ export default function SignInForm() {
               <aside className="auth-brand-panel">
                 <div className="auth-brand-top">
                   <p className="auth-brand-mark">Portlogiq</p>
-                  <p className="auth-brand-sub">General Store</p>
+                  
                 </div>
                 <div className="auth-brand-copy">
                   <h2 className="auth-brand-headline">Fresh from local growers to your table.</h2>

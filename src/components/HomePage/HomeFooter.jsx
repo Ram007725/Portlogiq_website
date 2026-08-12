@@ -68,7 +68,7 @@ const HomeFooter = () => {
         </div>
 
         <div className="mt-6 text-center text-xs space-y-2" style={{ color: "var(--home-text-muted)" }}>
-          <p>&copy; 2026, Portlogiq – General Store</p>
+          <p>&copy; 2026, Portlogiq</p>
           <div className="flex justify-center gap-4">
             <Link to="/shop" className="home-footer-link">Refund policy</Link>
             <Link to="/shop" className="home-footer-link">Privacy policy</Link>

@@ -444,16 +444,14 @@ const CheckOutPage = () => {
                       Delivery Date<span className="checkout-required">*</span>
                     </label>
                     {availableDeliveryDates.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="checkout-date-grid">
                         {availableDeliveryDates.map((dateOption) => (
                           <button
                             key={dateOption.value}
                             type="button"
                             onClick={() => setDeliveryDate(dateOption.value)}
-                            className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
-                              deliveryDate === dateOption.value
-                                ? "border-blue-600 bg-blue-600 text-white shadow"
-                                : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50"
+                            className={`checkout-date-option${
+                              deliveryDate === dateOption.value ? " is-selected" : ""
                             }`}
                           >
                             {dateOption.label}
@@ -461,7 +459,7 @@ const CheckOutPage = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      <p className="checkout-date-empty">
                         No delivery dates are available for the next three weeks.
                       </p>
                     )}

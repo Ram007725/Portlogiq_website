@@ -630,6 +630,29 @@ function RegisterFormInner() {
                             </p>
                           )}
                         </div>
+
+                        <div className="auth-field">
+                          <label className="auth-label" htmlFor="reg-family-size">
+                            Family Size
+                          </label>
+                          <input
+                            id="reg-family-size"
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={familySize}
+                            onChange={(e) =>
+                              setFamilySize(e.target.value === "" ? "" : Number(e.target.value))
+                            }
+                            className="auth-input"
+                            placeholder="e.g. 4"
+                          />
+                          {errors.family_size && (
+                            <p className="auth-field-error" role="alert">
+                              {errors.family_size[0]}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       <div className={`auth-map-wrap ${address1 ? "is-open" : "is-closed"}`}>
@@ -672,28 +695,6 @@ function RegisterFormInner() {
                   </p>
                 </div>
               </div>
-=======
-          {/* Family Size */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Family Size</label>
-              <input
-                type="number"
-                min={1}
-                max={50}
-                value={familySize}
-                onChange={(e) =>
-                  setFamilySize(e.target.value === "" ? "" : Number(e.target.value))
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g. 4"
-              />
-              {errors.family_size && <p className="text-red-500">{errors.family_size[0]}</p>}
-            </div>
-          </div>
-
-        
             </div>
           </div>
         </section>

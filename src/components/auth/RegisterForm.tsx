@@ -131,6 +131,7 @@ function RegisterFormInner() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [familySize, setFamilySize] = useState<number | "">("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
   const [suburb, setSuburb] = useState("");
@@ -298,6 +299,7 @@ function RegisterFormInner() {
         phone,
         email,
         password,
+        family_size: familySize === "" ? null : Number(familySize),
         address_line1: address1,
         address_line2: address2,
         city: suburb,
@@ -511,7 +513,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Postal + Card */}
+          {/* Postal Code + Card Details */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label>Postal Code</label>
@@ -523,7 +525,6 @@ useEffect(() => {
                      readOnly 
               />
             </div>
-            
             <div className="card-section">
               <label className="card-label">Card Details<span className="text-red-500"> *</span></label>
               <div className="card-box">
@@ -550,6 +551,26 @@ useEffect(() => {
                 />
               </div>
               {error && <div className="text-red-500 text-sm">{error}</div>}
+            </div>
+          </div>
+
+          {/* Family Size */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label>Family Size</label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={familySize}
+                onChange={(e) =>
+                  setFamilySize(e.target.value === "" ? "" : Number(e.target.value))
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-3 text-gray-900 bg-white  
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g. 4"
+              />
+              {errors.family_size && <p className="text-red-500">{errors.family_size[0]}</p>}
             </div>
           </div>
 
